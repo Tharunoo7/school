@@ -14,9 +14,9 @@ function getSampleHistoryDates() {
     // Generate sample data for ~5 random days in the previous month
     const statuses = ['Present', 'Absent', 'Late', 'Present', 'Present'];
     for (let i = 0; i < 5; i++) {
-        const day = Math.floor(Math.random() * daysInPrevMonth) + 1; // Random day (1 to N)
-        const dateStr = ${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')};
-        if (!history[dateStr]) { // Avoid duplicates for this simple sample
+        const day = Math.floor(Math.random() * daysInPrevMonth) + 1;
+        const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+        if (!history[dateStr]) {
             history[dateStr] = statuses[i % statuses.length];
         }
     }
@@ -24,7 +24,6 @@ function getSampleHistoryDates() {
 }
 
 const studentData = [
-    // <<< Added 'attendanceHistory' object with sample data >>>
     { id: 1, name: 'Alice Johnson', grade: '10', age: 15, email: 'alice.j@example.com', feesPaid: true, marks: 88, attendance: 'Pending', attendanceHistory: getSampleHistoryDates() },
     { id: 2, name: 'Bob Williams', grade: '9', age: 14, email: 'bob.w@example.com', feesPaid: false, marks: 72, attendance: 'Pending', attendanceHistory: getSampleHistoryDates() },
     { id: 3, name: 'Charlie Brown', grade: '11', age: 16, email: 'charlie.b@example.com', feesPaid: true, marks: 95, attendance: 'Pending', attendanceHistory: getSampleHistoryDates() },
@@ -53,7 +52,7 @@ function getTeacherNameById(id) {
 }
 
 function getResultStatus(marks) {
-  if (marks === null || marks === undefined || isNaN(marks)) return '<span class="badge badge-secondary">N/A</span>'; // Handle cases where marks are not set
+  if (marks === null || marks === undefined || isNaN(marks)) return '<span class="badge badge-secondary">N/A</span>';
   if (marks >= 90) return '<span class="badge badge-success">Excellent</span>';
   if (marks >= 75) return '<span class="badge badge-primary">Good</span>';
   if (marks >= 50) return '<span class="badge badge-warning">Pass</span>';
@@ -67,7 +66,7 @@ function getFeeStatus(paid) {
 }
 
 function getAttendanceStatusBadge(status) {
-    switch (status?.toLowerCase()) { // Added optional chaining and lowercase check
+    switch (status?.toLowerCase()) {
         case 'present':
             return '<span class="badge badge-present">Present</span>';
         case 'absent':
@@ -76,189 +75,40 @@ function getAttendanceStatusBadge(status) {
             return '<span class="badge badge-late">Late</span>';
         case 'pending':
         default:
-            // Check if it's actually 'Pending' or just undefined/null
             const effectiveStatus = status || 'Pending';
-            return <span class="badge badge-pending">${effectiveStatus}</span>; // Display 'Pending' if null/undefined
+            return `<span class="badge badge-pending">${effectiveStatus}</span>`;
     }
 }
-
 
 function getCurrentDateString() {
     const today = new Date();
     const options = { year: 'numeric', month: 'long', day: 'numeric' };
-    return today.toLocaleDateString(undefined, options); // Use locale format
+    return today.toLocaleDateString(undefined, options);
 }
 
-// <<< New Helper: Get Dates for Previous Month >>>
 function getPreviousMonthDates() {
     const dates = [];
     const today = new Date();
-    // Calculate the first day of the previous month
     const firstDayPrevMonth = new Date(today.getFullYear(), today.getMonth() - 1, 1);
     const year = firstDayPrevMonth.getFullYear();
-    const month = firstDayPrevMonth.getMonth(); // 0-indexed
+    const month = firstDayPrevMonth.getMonth();
 
-    // Calculate the number of days in the previous month
     const daysInMonth = new Date(year, month + 1, 0).getDate();
 
     for (let day = 1; day <= daysInMonth; day++) {
-        const date = new Date(year, month, day);
-        // Format as YYYY-MM-DD
-        const dateString = ${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')};
+        const dateString = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
         dates.push(dateString);
     }
-    return { year, month, dates }; // Return year/month info too
+    return { year, month, dates };
 }
 
-// <<< New Helper: Format YYYY-MM-DD for display >>>
 function formatDateForDisplay(dateString) {
     const [year, month, day] = dateString.split('-');
-    const date = new Date(year, month - 1, day); // Month is 0-indexed
+    const date = new Date(year, month - 1, day);
     const options = { month: 'short', day: 'numeric', weekday: 'short' };
     return date.toLocaleDateString(undefined, options);
 }
-
-
-// --- HTML Generation Functions ---
-
-function generateStudentProfile(student) {
-    const result = getResultStatus(student.marks);
-    const fees = getFeeStatus(student.feesPaid);
-    const attendance = getAttendanceStatusBadge(student.attendance); // Today's attendance
-    return `
-    <section>
-        <h2>Student Profile: ${student.name}</h2>
-        <p><strong>ID:</strong> ${student.id}</p>
-        <p><strong>Name:</strong> ${student.name}</p>
-        <p><strong>Grade:</strong> ${student.grade}</p>
-        <p><strong>Age:</strong> ${student.age}</p>
-        <p><strong>Email:</strong> <a href="mailto:${student.email}">${student.email}</a></p>
-        <p><strong>Fees Status:</strong> ${fees}</p>
-        <p><strong>Marks:</strong> ${student.marks !== null && student.marks !== undefined ? student.marks + ' %' : 'N/A'}</p>
-        <p><strong>Result Status:</strong> ${result}</p>
-        <p><strong>Today's Attendance:</strong> ${attendance}</p>
-        <!-- Maybe add link to history modal from here too -->
-        <button class="button-link view-history" style="margin-top: 1rem;" onclick="showAttendanceHistoryModal(${student.id})">View Attendance History</button>
-        <br>
-        <a href="#students" class="back-link">← Back to Student List</a>
-    </section>`;
-}
-// ... (generateTeacherProfile, generateEditStudentForm, generateEditTeacherForm remain the same) ...
-function generateTeacherProfile(teacher) {
-    // (No changes needed here unless adding attendance for teachers)
-    return `
-    <section>
-        <h2>Teacher Profile: ${teacher.name}</h2>
-        <p><strong>ID:</strong> ${teacher.id}</p>
-        <p><strong>Name:</strong> ${teacher.name}</p>
-        <p><strong>Subject(s):</strong> ${teacher.subject}</p>
-        <p><strong>Email:</strong> <a href="mailto:${teacher.email}">${teacher.email}</a></p>
-        <p><strong>Phone:</strong> <a href="tel:${teacher.phone}">${teacher.phone}</a></p>
-        <a href="#teachers" class="back-link">← Back to Teacher List</a>
-    </section>`;
-  }
-
-  function generateEditStudentForm(student) {
-    // Handle potential null/undefined marks for the input field default value
-    const currentMarks = (student.marks !== null && student.marks !== undefined) ? student.marks : '';
-    // (No changes needed for attendance here, usually edited separately)
-    return `
-    <h3>Edit Student: ${student.name}</h3>
-    <form id="editStudentForm">
-        <input type="hidden" id="editStudentId" value="${student.id}">
-
-        <div>
-            <label for="editStudentName">Name:</label>
-            <input type="text" id="editStudentName" value="${student.name}" required>
-        </div>
-        <div>
-            <label for="editStudentGrade">Grade:</label>
-            <input type="text" id="editStudentGrade" value="${student.grade}" required>
-        </div>
-        <div>
-            <label for="editStudentEmail">Email:</label>
-            <input type="email" id="editStudentEmail" value="${student.email}" required>
-        </div>
-        <div>
-            <label for="editStudentAge">Age:</label>
-            <input type="number" id="editStudentAge" value="${student.age}" required min="5">
-        </div>
-        <div>
-            <label for="editStudentMarks">Marks (%):</label>
-            <input type="number" id="editStudentMarks" value="${currentMarks}" placeholder="Enter marks (0-100)" required min="0" max="100">
-        </div>
-        <div class="checkbox-label full-width">
-             <input type="checkbox" id="editStudentFees" ${student.feesPaid ? 'checked' : ''}>
-             <label for="editStudentFees">Fees Paid</label> <!-- Label associated with checkbox -->
-        </div>
-
-        <button type="submit" class="full-width">Save Changes</button>
-    </form>`;
-  }
-
-  function generateEditTeacherForm(teacher) {
-    // (No changes needed here)
-    return `
-    <h3>Edit Teacher: ${teacher.name}</h3>
-    <form id="editTeacherForm">
-        <input type="hidden" id="editTeacherId" value="${teacher.id}">
-
-        <div>
-            <label for="editTeacherName">Name:</label>
-            <input type="text" id="editTeacherName" value="${teacher.name}" required>
-        </div>
-        <div>
-            <label for="editTeacherSubject">Subject(s):</label>
-            <input type="text" id="editTeacherSubject" value="${teacher.subject}" required>
-        </div>
-        <div>
-             <label for="editTeacherEmail">Email:</label>
-            <input type="email" id="editTeacherEmail" value="${teacher.email}" required>
-        </div>
-        <div>
-            <label for="editTeacherPhone">Phone:</label>
-            <input type="tel" id="editTeacherPhone" value="${teacher.phone}" required pattern="[0-9\\-]{10,15}" title="Enter a valid phone number (e.g., 555-123-4567)">
-        </div>
-        <button type="submit" class="full-width">Save Changes</button>
-    </form>`;
-  }
-
-// --- Application Routes ---
-
-const routes = {
-    // ... (Keep #dashboard, #students, #teachers, #classes, #fees, #marks, #results as they were) ...
-    '#dashboard': `
-        <section>
-            <h2>Dashboard</h2>
-            <p>Welcome to the enhanced School Management System Dashboard.</p>
-            <p>Use the navigation above to manage different aspects of the school. This demo showcases basic CRUD operations and section navigation using vanilla JavaScript.</p>
-            <div style="display: flex; gap: 1rem; margin-top: 2rem; flex-wrap: wrap;">
-                <div style="flex: 1; min-width: 200px; background-color: var(--primary-lighter); padding: 1.5rem; border-radius: var(--border-radius-md); text-align: center;">
-                    <h3 style="color: var(--primary-darker); margin-bottom: 0.5rem;">Students</h3>
-                    <p style="font-size: 2rem; font-weight: 600;">${studentData.length}</p>
-                </div>
-                 <div style="flex: 1; min-width: 200px; background-color: var(--secondary-lighter); padding: 1.5rem; border-radius: var(--border-radius-md); text-align: center;">
-                    <h3 style="color: var(--secondary-darker); margin-bottom: 0.5rem;">Teachers</h3>
-                    <p style="font-size: 2rem; font-weight: 600;">${teacherData.length}</p>
-                </div>
-                 <div style="flex: 1; min-width: 200px; background-color: var(--accent-lighter); padding: 1.5rem; border-radius: var(--border-radius-md); text-align: center;">
-                    <h3 style="color: var(--accent-darker); margin-bottom: 0.5rem;">Classes</h3>
-                    <p style="font-size: 2rem; font-weight: 600;">${classData.length}</p>
-                </div>
-            </div>
-        </section>`,
-
-    '#students': () => {
-        const tableRows = studentData.map(s => `
-            <tr>
-                <td><a href="#student-${s.id}">${s.name}</a></td>
-                <td>${s.grade}</td>
-                <td>${s.age}</td>
-                <td>${s.marks !== null && s.marks !== undefined ? s.marks + ' %' : 'N/A'}</td>
-                <td>${getFeeStatus(s.feesPaid)}</td>
-                <td>${getAttendanceStatusBadge(s.attendance)}</td> <!-- Added Attendance Status -->
-                <td>
-                    <div class="action-buttons">
+<div class="action-buttons">
                          <button class="edit" onclick="editStudent(${s.id})">Edit</button>
                          <button class="delete" onclick="deleteStudent(${s.id})">Delete</button>
                     </div>
